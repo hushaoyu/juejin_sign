@@ -8,6 +8,9 @@ on:
   workflow_dispatch:
     # 允许手动触发
 
+permissions:
+  actions: write  # 授予管理工作流的权限
+
 jobs:
   checkin:
     runs-on: ubuntu-latest
