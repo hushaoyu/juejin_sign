@@ -1,0 +1,63 @@
+name: Juejin Checkin
+
+on:
+  schedule:
+    # 每天早上8:30运行（UTC时间，对应北京时间16:30，需要调整为UTC时间）
+    # 北京时间8:30 = UTC 0:30
+    - cron: '30 0 * * *'
+  workflow_dispatch:
+    # 允许手动触发
+
+jobs:
+  checkin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create config.py from secrets
+        run: |
+          cat > config.py << EOF
+          # 掘金签到配置文件
+          
+          # ============= 必填配置 =============
+          COOKIE = "${{ secrets.JUEJIN_COOKIE }}"
+          AID = "2608"
+          UUID = "${{ secrets.JUEJIN_UUID }}"
+          SPIDER = "0"
+          MS_TOKEN = "${{ secrets.JUEJIN_MS_TOKEN }}"
+          A_BOGUS = "${{ secrets.JUEJIN_A_BOGUS }}"
+          
+          # ============= 可选配置 =============
+          NOTIFY_METHOD = "${{ secrets.NOTIFY_METHOD || 'feishu' }}"
+          WEBHOOK_URL = "${{ secrets.WEBHOOK_URL }}"
+          TELEGRAM_BOT_TOKEN = "${{ secrets.TELEGRAM_BOT_TOKEN }}"
+          TELEGRAM_CHAT_ID = "${{ secrets.TELEGRAM_CHAT_ID }}"
+          EOF
+
+      - name: Run checkin script
+        run: |
+          python src/main.py
+
+      - name: Send notification
+        run: |
+          python src/notify.py
+
+      - name: 🎉 清理旧的工作流记录
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 1
+          keep_minimum_runs: 10
+

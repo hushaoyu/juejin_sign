@@ -1,0 +1,45 @@
+name: 单独分支空提交保活
+
+on:
+  schedule:
+    - cron: "0 9 1 * *" # 每月 1 日
+  workflow_dispatch: {}   # 支持手动触发，方便测试
+
+permissions:
+  contents: write   # 需要写权限来 push
+
+env:
+  BRANCH_NAME: heartbeat   # 目标分支名，可修改
+
+jobs:
+  empty-commit-keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          # 设置提交作者为 GitHub Actions 官方 bot
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create or update heartbeat branch
+        run: |
+          # 检查分支是否存在
+          if git ls-remote --heads origin "${BRANCH_NAME}" | grep -q "${BRANCH_NAME}"; then
+            # 分支存在，切换到分支
+            git checkout "${BRANCH_NAME}"
+          else
+            # 分支不存在，创建孤儿分支
+            git checkout --orphan "${BRANCH_NAME}"
+            # 移除所有文件（如果有）
+            git rm -rf .
+          fi
+          # 空白提交
+          git commit --allow-empty -m "chore(heartbeat): monthly empty commit $(date -u +%Y-%m-%d)"
+          # 推送分支
+          git push origin "${BRANCH_NAME}"
+
