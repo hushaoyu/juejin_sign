@@ -2,9 +2,9 @@ name: Juejin Checkin
 
 on:
   schedule:
-    # 每天早上8:30运行（UTC时间，对应北京时间16:30，需要调整为UTC时间）
-    # 北京时间8:30 = UTC 0:30
-    - cron: '30 0 * * *'
+    # 每天早上9:30运行（UTC时间，对应北京时间9:30，需要调整为UTC时间）
+    # 北京时间9:30 = UTC 1:30
+    - cron: '30 1 * * *'
   workflow_dispatch:
     # 允许手动触发
 
